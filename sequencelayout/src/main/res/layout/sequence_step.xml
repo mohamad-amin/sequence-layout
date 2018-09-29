@@ -8,20 +8,8 @@
        android:orientation="horizontal"
        tools:parentTag="android.widget.TableRow">
 
-    <TextView
-        android:id="@+id/anchor"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="28dp"
-        android:ellipsize="end"
-        android:maxLines="1"
-        android:maxWidth="@dimen/sequence_anchor_max_width"
-        android:paddingEnd="16dp"
-        android:paddingStart="0dp"
-        tools:layout_width="64dp"
-        tools:text="30 Nov"/>
-
     <LinearLayout
+        android:gravity="right"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
@@ -29,16 +17,32 @@
         android:paddingBottom="16dp">
 
         <TextView
+            android:gravity="right"
             android:id="@+id/title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             tools:text="The Title of this Step"/>
 
         <TextView
+            android:gravity="right"
             android:id="@+id/subtitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             tools:text="More text More text More text\nMore text More text More text More text More text "/>
     </LinearLayout>
+
+    <TextView
+        android:gravity="right"
+        android:id="@+id/anchor"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="28dp"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:maxWidth="@dimen/sequence_anchor_max_width"
+        android:paddingLeft="16dp"
+        android:paddingRight="0dp"
+        tools:layout_width="64dp"
+        tools:text="30 Nov"/>
 </merge>

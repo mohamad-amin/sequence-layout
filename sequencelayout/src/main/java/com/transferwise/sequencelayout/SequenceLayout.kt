@@ -3,7 +3,10 @@ package com.transferwise.sequencelayout
 import android.content.Context
 import android.content.res.TypedArray
 import android.graphics.Rect
+import android.os.Build
+import android.os.Build.VERSION_CODES
 import android.support.annotation.ColorInt
+import android.support.annotation.RequiresApi
 import android.support.annotation.StyleRes
 import android.util.AttributeSet
 import android.view.Gravity
@@ -12,7 +15,11 @@ import android.view.ViewGroup
 import android.view.ViewTreeObserver
 import android.view.animation.LinearInterpolator
 import android.widget.FrameLayout
-import kotlinx.android.synthetic.main.sequence_layout.view.*
+import kotlinx.android.synthetic.main.sequence_layout.view.dotsWrapper
+import kotlinx.android.synthetic.main.sequence_layout.view.progressBarBackground
+import kotlinx.android.synthetic.main.sequence_layout.view.progressBarForeground
+import kotlinx.android.synthetic.main.sequence_layout.view.progressBarWrapper
+import kotlinx.android.synthetic.main.sequence_layout.view.stepsWrapper
 
 /**
  * Vertical step tracker that contains {@link com.transferwise.sequencelayout.SequenceStep}s and animates to the first active step.
@@ -65,7 +72,7 @@ public class SequenceLayout(context: Context?, attrs: AttributeSet?, defStyleAtt
     private var progressForegroundColor: Int = 0
 
     public fun start() {
-        removeCallbacks(animateToActive)
+        removeUpdateCallbackIfKitkatOrUpper()
         viewTreeObserver.addOnGlobalLayoutListener(this)
     }
 
@@ -135,7 +142,8 @@ public class SequenceLayout(context: Context?, attrs: AttributeSet?, defStyleAtt
 
     private fun setProgressBarHorizontalOffset() {
         val firstAnchor: View = stepsWrapper.getChildAt(0).findViewById(R.id.anchor)
-        progressBarWrapper.translationX = firstAnchor.measuredWidth + 4.toPx() - (progressBarWrapper.measuredWidth / 2f) //TODO dynamic dot size
+        //TODO dynamic dot size
+        progressBarWrapper.translationX = measuredWidth - (firstAnchor.measuredWidth + 4.toPx() - (progressBarWrapper.measuredWidth / 2f))
     }
 
     private fun placeDots() {
@@ -172,7 +180,9 @@ public class SequenceLayout(context: Context?, attrs: AttributeSet?, defStyleAtt
         progressBarForeground.requestLayout()
     }
 
+    @RequiresApi(VERSION_CODES.KITKAT)
     private val animateToActive = {
+
         progressBarForeground.visibility = VISIBLE
         progressBarForeground.pivotY = 0f
         progressBarForeground.scaleY = 0f
@@ -192,29 +202,31 @@ public class SequenceLayout(context: Context?, attrs: AttributeSet?, defStyleAtt
                     .scaleY(scaleEnd)
                     .setInterpolator(LinearInterpolator())
                     .setDuration(activeStepIndex * resources.getInteger(R.integer.sequence_step_duration).toLong())
-                    .setUpdateListener({
+                    .setUpdateListener {
                         val animatedOffset = progressBarForeground.scaleY * progressBarBackground.measuredHeight
                         dotsWrapper
-                                .children()
-                                .forEachIndexed { i, view ->
-                                    if (i > activeStepIndex) {
-                                        return@forEachIndexed
-                                    }
-                                    val dot = view as SequenceStepDot
-                                    val dotTopMargin = (dot.layoutParams as LayoutParams).topMargin -
-                                            progressBarForegroundTopMargin -
-                                            (dot.measuredHeight / 2)
-                                    if (animatedOffset >= dotTopMargin) {
-                                        if (i < activeStepIndex && !dot.isEnabled) {
-                                            dot.isEnabled = true
-                                        } else if (i == activeStepIndex && !dot.isActivated) {
-                                            dot.isActivated = true
-                                        }
+                            .children()
+                            .forEachIndexed { i, view ->
+                                if (i > activeStepIndex) {
+                                    return@forEachIndexed
+                                }
+                                val dot = view as SequenceStepDot
+                                val dotTopMargin = (dot.layoutParams as LayoutParams).topMargin -
+                                    progressBarForegroundTopMargin -
+                                    (dot.measuredHeight / 2)
+                                if (animatedOffset >= dotTopMargin) {
+                                    if (i < activeStepIndex && !dot.isEnabled) {
+                                        dot.isEnabled = true
+                                    } else if (i == activeStepIndex && !dot.isActivated) {
+                                        dot.isActivated = true
                                     }
                                 }
-                    })
-                    .start()
+                            }
+                    }
+                .start()
+
         }
+
     }
 
     private fun getRelativeTop(child: View, parent: ViewGroup): Int {
@@ -225,7 +237,7 @@ public class SequenceLayout(context: Context?, attrs: AttributeSet?, defStyleAtt
     }
 
     private fun stop() {
-        removeCallbacks(animateToActive)
+        removeUpdateCallbackIfKitkatOrUpper()
         viewTreeObserver.removeOnGlobalLayoutListener(this)
     }
 
@@ -250,7 +262,20 @@ public class SequenceLayout(context: Context?, attrs: AttributeSet?, defStyleAtt
             setProgressBarHorizontalOffset()
             placeDots()
             viewTreeObserver.removeOnGlobalLayoutListener(this)
+            postUpdateCallbackIfKitkatOrUpper()
+        }
+    }
+
+    private fun removeUpdateCallbackIfKitkatOrUpper() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            removeCallbacks(animateToActive)
+        }
+    }
+
+    private fun postUpdateCallbackIfKitkatOrUpper() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             post(animateToActive)
         }
     }
+
 }
